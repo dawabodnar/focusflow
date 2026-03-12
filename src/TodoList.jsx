@@ -5,7 +5,7 @@ function TodoList({ userId, ActiveTasksId, setActiveTasksId }) {
     const [tasks, setTasks] = useState([]);
     const [inputValue, setInputValue] = useState("");
 
-    const API_URL = "http://localhost:5001/api/tasks"; // змінити на деплойну адресу після розгортання
+    const API_URL = "https://focusflow-1-xxwp.onrender.com"; // змінити на деплойну адресу після розгортання
 
     //  Отримати задачі з серверу 
     useEffect(() => {

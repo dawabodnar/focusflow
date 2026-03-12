@@ -1,0 +1,55 @@
+:root {
+  --ink:    #0f0e0c;
+  --paper:  #f5f2ec;
+  --warm:   #ede8db;
+  --accent: #d4420a;
+  --muted:  #8a857c;
+  --border: #dedad0;
+  --green:  #2d6a4f;
+  --blue:   #1d3557;
+}
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Instrument Sans', sans-serif;
+  font-weight: 300;
+}
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+.btn-home {
+    position: fixed;
+   top: auto;
+    left: 44px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    font-weight: 500;
+    transition: color 0.25s, gap 0.25s;
+    z-index: 100;
+}
+
+.btn-home::before {
+    content: '';
+    width: 40px;
+    height: 1px;
+    background: currentColor;
+    display: block;
+    transition: width 0.3s ease;
+}
+
+.btn-home:hover {
+    color: var(--accent);
+    gap: 18px;
+}
+
+.btn-home:hover::before {
+    width: 56px;
+}

@@ -1,10 +1,19 @@
 import { Link } from "react-router-dom";
 import "./Home.css";
+import { GoogleLogin } from '@react-oauth/google';
 
 export default function Home() {
     return (
         <div className="home">
-
+      <GoogleLogin
+        onSuccess={credentialResponse => {
+          console.log(credentialResponse);
+          // зберегти userId або токен
+        }}
+        onError={() => {
+          console.log('Login Failed');
+        }}
+      />
             <header className="hero">
                 <div className="hero-bg-letter">F</div>
                 <div className="hero-body">

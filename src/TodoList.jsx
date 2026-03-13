@@ -5,7 +5,7 @@ function TodoList({ userId, ActiveTasksId, setActiveTasksId }) {
     const [tasks, setTasks] = useState([]);
     const [inputValue, setInputValue] = useState("");
 
-    const API_URL = "https://focusflow-1-xxwp.onrender.com/api/tasks"; // змінити на деплойну адресу після розгортання
+    const API_URL = "https://focusflow-1-xxwp.onrender.com/api/tasks"; 
 
     //  Отримати задачі з серверу 
     useEffect(() => {
@@ -28,25 +28,24 @@ function TodoList({ userId, ActiveTasksId, setActiveTasksId }) {
     }, [userId]);
 
     // Додати нову задачу 
-    const addTask = async () => {
-        if (!inputValue) return;
-        try {
-            const res = await fetch(API_URL, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    userId,
-                    text: inputValue,
-                    completed: false
-                })
-            });
-            const newTask = await res.json();
-            setTasks(prev => [...prev, newTask]);
-            setInputValue("");
-        } catch (err) {
-            console.error("Помилка при додаванні задачі:", err);
-        }
-    };
+const addTask = async (credential) => {
+    if (!inputValue) return;
+    try {
+        const res = await fetch(API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                credential,  // передаємо Google token
+                text: inputValue
+            })
+        });
+        const newTask = await res.json();
+        setTasks(prev => [...prev, newTask]);
+        setInputValue("");
+    } catch (err) {
+        console.error("Помилка при додаванні задачі:", err);
+    }
+};
 
     // Перемкнути активну задачу 
     const toggleTask = (id) => {

@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
+const verifyGoogleToken = require('./verifyGoogleToken');
 
 const app = express();
 
@@ -38,14 +39,19 @@ app.get("/api/tasks/:userId", async (req, res) => {
 
 // Додати нову задачу
 app.post("/api/tasks", async (req, res) => {
-  const { userId, text, completed } = req.body;
-  const newTask = new Task({ userId, text, completed });
-  try {
-    const savedTask = await newTask.save();
-    res.status(201).json(savedTask);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
+    const { credential, text } = req.body;
+    try {
+        const user = await verifyGoogleToken(credential);  
+        const newTask = new Task({
+            userId: user.userId,  
+            text,
+            completed: false
+        });
+        const savedTask = await newTask.save();
+        res.status(201).json(savedTask);
+    } catch (err) {
+        res.status(401).json({ message: "Невалідний Google token" });
+    }
 });
 
 // Видалити задачу

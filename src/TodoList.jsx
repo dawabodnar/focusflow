@@ -5,7 +5,7 @@ function TodoList({ userId, ActiveTasksId, setActiveTasksId }) {
     const [tasks, setTasks] = useState([]);
     const [inputValue, setInputValue] = useState("");
 
-    const API_URL = "https://focusflow-1-xxwp.onrender.com"; // змінити на деплойну адресу після розгортання
+    const API_URL = "https://focusflow-1-xxwp.onrender.com/api/tasks"; // змінити на деплойну адресу після розгортання
 
     //  Отримати задачі з серверу 
     useEffect(() => {
@@ -13,6 +13,11 @@ function TodoList({ userId, ActiveTasksId, setActiveTasksId }) {
             if (!userId) return;
             try {
                 const res = await fetch(`${API_URL}/${userId}`);
+
+                if (!res.ok) {
+                    throw new Error("Помилка отримання задач");
+                }
+
                 const data = await res.json();
                 setTasks(data);
             } catch (err) {

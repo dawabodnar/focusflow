@@ -8,7 +8,6 @@ export default function Home() {
       <GoogleLogin
         onSuccess={credentialResponse => {
           console.log(credentialResponse);
-          // зберегти userId або токен
         }}
         onError={() => {
           console.log('Login Failed');

@@ -22,7 +22,9 @@ const taskSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 const Task = mongoose.model("Task", taskSchema);
-
+app.get("/", (req, res) => {
+  res.send("API works");
+});
 // Отримати всі задачі користувача
 app.get("/api/tasks/:userId", async (req, res) => {
   const { userId } = req.params;

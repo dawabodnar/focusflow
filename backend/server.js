@@ -1,7 +1,3 @@
-
-
-
-
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
@@ -14,7 +10,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Підключення до MongoDB — тут має бути твій рядок
+// Підключення до MongoDB
 mongoose.connect(
   "mongodb+srv://daria_b:3DKeh1XNNhpBKtLf@daria.7qd9zvm.mongodb.net/?appName=Daria",
   {}

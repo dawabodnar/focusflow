@@ -78,6 +78,49 @@
   max-width: 420px;
   margin-bottom: 38px;
 }
+.auth-buttons {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  gap: 20px;
+  z-index: 10;
+}
+.google-login-wrapper {
+  display: inline-block;
+}
+.google-login-wrapper button {
+  background: var(--ink);
+  color: var(--paper);
+  border: none;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 12px 24px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: background 0.25s;
+}
+.google-login-wrapper button:hover {
+  background: var(--accent);
+}
+.btn-logout {
+  background: var(--accent);
+  color: var(--paper);
+  border: none;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 12px 24px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: background 0.25s;
+}
+.btn-logout:hover {
+  background: var(--ink);
+}
 .start-button {
   display: inline-flex;
   align-items: center;

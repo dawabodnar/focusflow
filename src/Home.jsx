@@ -4,21 +4,39 @@ import { GoogleLogin } from '@react-oauth/google';
 import { useState } from "react";
 
 export default function Home() {
-    const [credential, setCredential] = useState(null);
+    const [credential, setCredential] = useState(localStorage.getItem('credential'));
+
+    const handleLoginSuccess = (credentialResponse) => {
+        const cred = credentialResponse.credential;
+        setCredential(cred);
+        localStorage.setItem('credential', cred);
+    };
+
+    const handleLogout = () => {
+        setCredential(null);
+        localStorage.removeItem('credential');
+    };
     return (
         <div className="home">
-                {!credential && (
-                <GoogleLogin
-                    onSuccess={(credentialResponse) => {
-                        setCredential(credentialResponse.credential);
-                    }}
-                    onError={() => {
-                        console.log("Login Failed");
-                    }}
-                />
-            )}
             <header className="hero">
                 <div className="hero-bg-letter">F</div>
+                <div className="auth-buttons">
+                    {!credential && (
+                        <div className="google-login-wrapper">
+                            <GoogleLogin
+                                className="google-login-btn"
+                                clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}
+                                onSuccess={handleLoginSuccess}
+                                onError={() => {
+                                    console.log("Login Failed");
+                                }}
+                            />
+                        </div>
+                    )}
+                    {credential && (
+                        <button onClick={handleLogout} className="btn-logout">Вийти</button>
+                    )}
+                </div>
                 <div className="hero-body">
                     <div className="hero-eyebrow">Фокус та продуктивність</div>
                     <h1> Focus<em>Flow</em></h1>
@@ -26,15 +44,14 @@ export default function Home() {
                     <p className="hero-desc">Застосунок для глибокої роботи на основі техніки Помодоро.
                         Плануйте, фокусуйтесь і відслідковуйте — все в одному місці.</p>
 
-            
-                        <Link
-                            to="/app"
-                            state={{ credential }}
-                            className="start-button"
-                        >
-                            Почати роботу
-                        </Link>
-                
+                    <Link
+                        to="/app"
+                        state={{ credential }}
+                        className="start-button"
+                    >
+                        Почати роботу
+                    </Link>
+
 
 
                     <div className="hero-scroll-down">

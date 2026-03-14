@@ -1,18 +1,22 @@
 import { Link } from "react-router-dom";
 import "./Home.css";
 import { GoogleLogin } from '@react-oauth/google';
+import { useState } from "react";
 
 export default function Home() {
+    const [credential, setCredential] = useState(null);
     return (
         <div className="home">
-      <GoogleLogin
-        onSuccess={credentialResponse => {
-          console.log(credentialResponse);
-        }}
-        onError={() => {
-          console.log('Login Failed');
-        }}
-      />
+                {!credential && (
+                <GoogleLogin
+                    onSuccess={(credentialResponse) => {
+                        setCredential(credentialResponse.credential);
+                    }}
+                    onError={() => {
+                        console.log("Login Failed");
+                    }}
+                />
+            )}
             <header className="hero">
                 <div className="hero-bg-letter">F</div>
                 <div className="hero-body">
@@ -22,7 +26,15 @@ export default function Home() {
                     <p className="hero-desc">Застосунок для глибокої роботи на основі техніки Помодоро.
                         Плануйте, фокусуйтесь і відслідковуйте — все в одному місці.</p>
 
-                    <Link to="/app" className="start-button">Почати роботу</Link>
+            
+                        <Link
+                            to="/app"
+                            state={{ credential }}
+                            className="start-button"
+                        >
+                            Почати роботу
+                        </Link>
+                
 
 
                     <div className="hero-scroll-down">

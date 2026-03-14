@@ -1,61 +1,58 @@
 import { useEffect, useState } from "react";
 import "./TodoList.css";
 
-function TodoList({ userId, ActiveTasksId, setActiveTasksId }) {
+function TodoList({ credential, ActiveTasksId, setActiveTasksId }) {
     const [tasks, setTasks] = useState([]);
     const [inputValue, setInputValue] = useState("");
+    const API_URL = "http://localhost:5001/api/tasks";
 
-    const API_URL = "https://focusflow-1-xxwp.onrender.com/api/tasks"; 
-
-    //  Отримати задачі з серверу 
+    // Отримати таски
     useEffect(() => {
         const fetchTasks = async () => {
-            if (!userId) return;
+            if (!credential) return;
+
             try {
-                const res = await fetch(`${API_URL}/${userId}`);
-
-                if (!res.ok) {
-                    throw new Error("Помилка отримання задач");
-                }
-
+                const res = await fetch(`${API_URL}/fetch`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ credential }),
+                });
                 const data = await res.json();
-                setTasks(data);
+                const tasksArray = Array.isArray(data) ? data : [];
+                setTasks(tasksArray);
             } catch (err) {
-                console.error(err);
+                console.error("Помилка при завантаженні задач:", err);
             }
         };
+
         fetchTasks();
-    }, [userId]);
+    }, [credential]);
 
-    // Додати нову задачу 
-const addTask = async (credential) => {
-    if (!inputValue) return;
-    try {
-        const res = await fetch(API_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                credential,  // передаємо Google token
-                text: inputValue
-            })
-        });
-        const newTask = await res.json();
-        setTasks(prev => [...prev, newTask]);
-        setInputValue("");
-    } catch (err) {
-        console.error("Помилка при додаванні задачі:", err);
-    }
-};
+    const addTask = async () => {
+        if (!inputValue.trim()) return; // не дозволяємо пусті таски
 
-    // Перемкнути активну задачу 
-    const toggleTask = (id) => {
-        setActiveTasksId(id);
+        try {
+            const res = await fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ credential, text: inputValue.trim() }),
+            });
+            const newTask = await res.json();
+            setTasks(prev => [...prev, newTask]);
+            setInputValue("");
+        } catch (err) {
+            console.error("Помилка при додаванні задачі:", err);
+        }
     };
 
-    //  Видалити задачу 
     const removeTask = async (id) => {
         try {
-            await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+            const res = await fetch(`${API_URL}/${id}`, { 
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ credential })
+            });
+            if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
             setTasks(prev => prev.filter(task => task._id !== id));
             if (ActiveTasksId === id) setActiveTasksId(null);
         } catch (err) {
@@ -63,13 +60,12 @@ const addTask = async (credential) => {
         }
     };
 
-    //  Позначити виконаною 
     const toggleCompleted = async (task) => {
         try {
             const res = await fetch(`${API_URL}/${task._id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ ...task, completed: !task.completed })
+                body: JSON.stringify({ ...task, completed: !task.completed, credential })
             });
             const updatedTask = await res.json();
             setTasks(prev => prev.map(t => t._id === updatedTask._id ? updatedTask : t));
@@ -102,7 +98,7 @@ const addTask = async (credential) => {
                     {tasks.map(task => (
                         <li
                             key={task._id}
-                            onClick={() => toggleTask(task._id)}
+                            onClick={() => setActiveTasksId(task._id)}
                             className={`todo-item ${task._id === ActiveTasksId ? "active" : ""}`}
                         >
                             <span
@@ -111,7 +107,10 @@ const addTask = async (credential) => {
                             >
                                 {task.text}
                             </span>
-                            <button onClick={(e) => { e.stopPropagation(); removeTask(task._id); }} className="todo-del">
+                            <button
+                                onClick={(e) => { e.stopPropagation(); removeTask(task._id); }}
+                                className="todo-del"
+                            >
                                 Видалити
                             </button>
                         </li>

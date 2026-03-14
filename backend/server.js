@@ -12,7 +12,7 @@ app.use(express.json());
 
 // Підключення до MongoDB
 mongoose.connect(
-  "mongodb+srv://daria_b:3DKeh1XNNhpBKtLf@daria.7qd9zvm.mongodb.net/?appName=Daria",
+  "mongodb+srv://daria_b:3DKeh1XNNhpBKtLf@daria.7qd9zvm.mongodb.net/focusflow?appName=Daria",
   {}
 )
 .then(() => console.log("MongoDB connected"))

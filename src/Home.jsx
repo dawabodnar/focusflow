@@ -5,16 +5,28 @@ import { useState } from "react";
 
 export default function Home() {
     const [credential, setCredential] = useState(localStorage.getItem('credential'));
+    const [userId, setUserId] = useState(localStorage.getItem('userId'));
 
-    const handleLoginSuccess = (credentialResponse) => {
-        const cred = credentialResponse.credential;
-        setCredential(cred);
-        localStorage.setItem('credential', cred);
-    };
+const handleLoginSuccess = (credentialResponse) => {
+    const cred = credentialResponse.credential;
+    setCredential(cred);
+    localStorage.setItem('credential', cred);
+
+    try {
+        const payload = JSON.parse(atob(cred.split('.')[1]));
+        const uid = payload.sub;
+        setUserId(uid);
+        localStorage.setItem('userId', uid);
+    } catch (error) {
+        console.error('Error decoding token:', error);
+    }
+};
 
     const handleLogout = () => {
         setCredential(null);
+        setUserId(null);
         localStorage.removeItem('credential');
+        localStorage.removeItem('userId');
     };
     return (
         <div className="home">
@@ -46,7 +58,7 @@ export default function Home() {
 
                     <Link
                         to="/app"
-                        state={{ credential }}
+                        state={{ credential, userId }}
                         className="start-button"
                     >
                         Почати роботу

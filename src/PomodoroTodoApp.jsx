@@ -9,6 +9,7 @@ function PomodoroTodoApp() {
 
   const location = useLocation();
   const credential = location.state?.credential || localStorage.getItem('credential');
+const userId = location.state?.userId || localStorage.getItem('userId'); // <- просто змінна, state не потрібен
 
   return (
     <div className="app">
@@ -17,6 +18,7 @@ function PomodoroTodoApp() {
         ActiveTasksId={ActiveTasksId}
         setActiveTasksId={setActiveTasksId}
         credential={credential}
+        userId={userId} 
       />
       <Link to="/" className="btn-home"> Головна</Link>
     </div>

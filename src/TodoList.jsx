@@ -1,33 +1,44 @@
 import { useEffect, useState } from "react";
 import "./TodoList.css";
 
-function TodoList({ credential, ActiveTasksId, setActiveTasksId }) {
+function TodoList({ credential, ActiveTasksId, setActiveTasksId,userId }) {
     const [tasks, setTasks] = useState([]);
     const [inputValue, setInputValue] = useState("");
-    const API_URL = "http://localhost:5001/api/tasks";
+    const API_URL = "https://focusflow-1-xxwp.onrender.com/api/tasks";
 
-    useEffect(() => {
-        if (credential) {
-            const fetchTasks = async () => {
-                try {
-                    const res = await fetch(`${API_URL}/fetch`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ credential }),
-                    });
-                    const data = await res.json();
-                    const tasksArray = Array.isArray(data) ? data : [];
-                    setTasks(tasksArray);
-                } catch (err) {
-                    console.error("Помилка при завантаженні задач:", err);
-                }
-            };
-            fetchTasks();
-        } else {
-            const localTasks = JSON.parse(localStorage.getItem('localTasks') || '[]');
-            setTasks(localTasks);
-        }
-    }, [credential]);
+useEffect(() => {
+    if (credential) {
+        const fetchTasks = async () => {
+            try {
+                const res = await fetch(`${API_URL}/fetch`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ credential }),
+                });
+                const data = await res.json();
+                const tasksArray = Array.isArray(data) ? data : [];
+                setTasks(tasksArray);
+            } catch (err) {
+                console.error("Помилка при завантаженні задач:", err);
+            }
+        };
+        fetchTasks();
+
+        // --- SSE ---
+        const eventSource = new EventSource(`${API_URL}/events`);
+        eventSource.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            if (data.userId === userId) {
+                fetchTasks(); // оновлюємо задачі лише для поточного користувача
+            }
+        };
+
+        return () => eventSource.close();
+    } else {
+        const localTasks = JSON.parse(localStorage.getItem('localTasks') || '[]');
+        setTasks(localTasks);
+    }
+}, [credential, userId]);
 
     // Зберігати локальні таски в localStorage
     useEffect(() => {

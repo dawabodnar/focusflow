@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const Task = require("../models/Task");
-const verifyGoogleToken = require("../verifyGoogleToken");
+const verifyToken = require("../verifyToken");
 
 // ================= SSE =================
 
@@ -32,7 +32,7 @@ router.post("/fetch", async (req, res) => {
   const { credential } = req.body;
   if (!credential) return res.status(400).json({ error: "Missing credential" });
   try {
-    const user = await verifyGoogleToken(credential);
+   const user = await verifyToken(credential);
     const tasks = await Task.find({ userId: user.userId });
     res.json(tasks);
   } catch (err) {
@@ -44,7 +44,7 @@ router.post("/", async (req, res) => {
   const { credential, text } = req.body;
   if (!credential || !text) return res.status(400).json({ error: "Missing credential or text" });
   try {
-    const user = await verifyGoogleToken(credential);
+    const user = await verifyToken(credential);
     const task = new Task({ userId: user.userId, text, completed: false });
     const savedTask = await task.save();
     sendUpdate(user.userId);
@@ -58,7 +58,7 @@ router.put("/:id", async (req, res) => {
   const { credential } = req.body;
   if (!credential) return res.status(400).json({ error: "Missing credential" });
   try {
-    const user = await verifyGoogleToken(credential);
+   const user = await verifyToken(credential);
     const task = await Task.findById(req.params.id);
     if (!task || task.userId !== user.userId) return res.status(404).json({ error: "Task not found" });
     const { text, completed } = req.body;
@@ -74,7 +74,7 @@ router.delete("/:id", async (req, res) => {
   const { credential } = req.body;
   if (!credential) return res.status(400).json({ error: "Missing credential" });
   try {
-    const user = await verifyGoogleToken(credential);
+  const user = await verifyToken(credential);
     const task = await Task.findById(req.params.id);
     if (!task || task.userId !== user.userId) return res.status(404).json({ error: "Task not found" });
     await Task.findByIdAndDelete(req.params.id);

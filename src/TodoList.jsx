@@ -15,44 +15,50 @@ function TodoList({ credential, ActiveTasksId, setActiveTasksId, userId, onTasks
 
     const [editingTaskId, setEditingTaskId] = useState(null);
     const [editingText, setEditingText] = useState("");
+    const [editingPriority, setEditingPriority] = useState("medium");
+    const [editingDeadline, setEditingDeadline] = useState("");
 
     const API_URL = "https://focusflow-1-xxwp.onrender.com/api/tasks";
 
+    // передаємо оновлення в батьківський компонент
     useEffect(() => {
         if (onTasksChange) onTasksChange(tasks);
     }, [tasks, onTasksChange]);
 
+    // завантаження задач
     useEffect(() => {
+        const fetchTasks = async () => {
+            if (!credential) {
+                const localTasks = JSON.parse(localStorage.getItem("localTasks") || "[]");
+                setTasks(localTasks);
+                return;
+            }
+            try {
+                const res = await fetch(`${API_URL}/fetch`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ credential }),
+                });
+                const data = await res.json();
+                setTasks(Array.isArray(data) ? data : []);
+            } catch (err) {
+                console.error("Помилка при завантаженні задач:", err);
+            }
+        };
+
+        fetchTasks();
+
         if (credential) {
-            const fetchTasks = async () => {
-                try {
-                    const res = await fetch(`${API_URL}/fetch`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ credential }),
-                    });
-                    const data = await res.json();
-                    setTasks(Array.isArray(data) ? data : []);
-                } catch (err) {
-                    console.error("Помилка при завантаженні задач:", err);
-                }
-            };
-
-            fetchTasks();
-
             const eventSource = new EventSource(`${API_URL}/events`);
             eventSource.onmessage = (event) => {
                 const data = JSON.parse(event.data);
                 if (data.userId === userId) fetchTasks();
             };
-
             return () => eventSource.close();
-        } else {
-            const localTasks = JSON.parse(localStorage.getItem("localTasks") || "[]");
-            setTasks(localTasks);
         }
     }, [credential, userId]);
 
+    // збереження локально для незалогінених
     useEffect(() => {
         if (!credential) {
             localStorage.setItem("localTasks", JSON.stringify(tasks));
@@ -62,19 +68,19 @@ function TodoList({ credential, ActiveTasksId, setActiveTasksId, userId, onTasks
     const addTask = async () => {
         if (!inputValue.trim()) return;
 
+        const newTaskPayload = {
+            text: inputValue.trim(),
+            priority,
+            deadline: deadline || null,
+        };
+
         if (credential) {
             try {
                 const res = await fetch(API_URL, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        credential,
-                        text: inputValue.trim(),
-                        priority,
-                        deadline: deadline || null,
-                    }),
+                    body: JSON.stringify({ ...newTaskPayload, credential }),
                 });
-
                 const newTask = await res.json();
                 setTasks((prev) => [...prev, newTask]);
             } catch (err) {
@@ -83,12 +89,9 @@ function TodoList({ credential, ActiveTasksId, setActiveTasksId, userId, onTasks
         } else {
             const newTask = {
                 _id: Date.now().toString(),
-                text: inputValue.trim(),
                 completed: false,
-                priority,
-                deadline: deadline || null,
+                ...newTaskPayload,
             };
-
             setTasks((prev) => [...prev, newTask]);
         }
 
@@ -105,33 +108,25 @@ function TodoList({ credential, ActiveTasksId, setActiveTasksId, userId, onTasks
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ credential }),
                 });
-
                 if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
-
-                setTasks((prev) => prev.filter((task) => task._id !== id));
-
-                if (ActiveTasksId === id) setActiveTasksId(null);
             } catch (err) {
                 console.error("Помилка при видаленні задачі:", err);
             }
-        } else {
-            setTasks((prev) => prev.filter((task) => task._id !== id));
-
-            if (ActiveTasksId === id) setActiveTasksId(null);
         }
+        setTasks((prev) => prev.filter((task) => task._id !== id));
+        if (ActiveTasksId === id) setActiveTasksId(null);
     };
 
     const toggleCompleted = async (task) => {
+        const updatedTaskPayload = { ...task, completed: !task.completed };
         if (credential) {
             try {
                 const res = await fetch(`${API_URL}/${task._id}`, {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ ...task, completed: !task.completed, credential }),
+                    body: JSON.stringify({ ...updatedTaskPayload, credential }),
                 });
-
                 const updatedTask = await res.json();
-
                 setTasks((prev) =>
                     prev.map((t) => (t._id === updatedTask._id ? updatedTask : t))
                 );
@@ -140,9 +135,7 @@ function TodoList({ credential, ActiveTasksId, setActiveTasksId, userId, onTasks
             }
         } else {
             setTasks((prev) =>
-                prev.map((t) =>
-                    t._id === task._id ? { ...t, completed: !t.completed } : t
-                )
+                prev.map((t) => (t._id === task._id ? updatedTaskPayload : t))
             );
         }
     };
@@ -150,25 +143,27 @@ function TodoList({ credential, ActiveTasksId, setActiveTasksId, userId, onTasks
     const startEdit = (task) => {
         setEditingTaskId(task._id);
         setEditingText(task.text);
+        setEditingPriority(task.priority || "medium");
+        setEditingDeadline(task.deadline ? task.deadline.split("T")[0] : "");
     };
 
     const saveEdit = async (task) => {
         if (!editingText.trim()) return;
+
+        const updatedTaskPayload = {
+            text: editingText,
+            priority: editingPriority,
+            deadline: editingDeadline || null,
+        };
 
         if (credential) {
             try {
                 const res = await fetch(`${API_URL}/${task._id}`, {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        ...task,
-                        text: editingText,
-                        credential,
-                    }),
+                    body: JSON.stringify({ ...task, ...updatedTaskPayload, credential }),
                 });
-
                 const updatedTask = await res.json();
-
                 setTasks((prev) =>
                     prev.map((t) => (t._id === updatedTask._id ? updatedTask : t))
                 );
@@ -178,18 +173,19 @@ function TodoList({ credential, ActiveTasksId, setActiveTasksId, userId, onTasks
         } else {
             setTasks((prev) =>
                 prev.map((t) =>
-                    t._id === task._id ? { ...t, text: editingText } : t
+                    t._id === task._id ? { ...t, ...updatedTaskPayload } : t
                 )
             );
         }
 
         setEditingTaskId(null);
         setEditingText("");
+        setEditingPriority("medium");
+        setEditingDeadline("");
     };
 
     const formatDeadline = (date) => {
         if (!date) return null;
-
         return new Date(date).toLocaleDateString("uk-UA", {
             day: "numeric",
             month: "short",
@@ -214,7 +210,6 @@ function TodoList({ credential, ActiveTasksId, setActiveTasksId, userId, onTasks
                     placeholder="add task..."
                     className="todo-input"
                 />
-
                 <select
                     className="todo-priority-select"
                     value={priority}
@@ -224,14 +219,12 @@ function TodoList({ credential, ActiveTasksId, setActiveTasksId, userId, onTasks
                     <option value="medium">Середній</option>
                     <option value="low">Низький</option>
                 </select>
-
                 <input
                     type="date"
                     className="todo-deadline-input"
                     value={deadline}
                     onChange={(e) => setDeadline(e.target.value)}
                 />
-
                 <button className="todo-add-btn" onClick={addTask}>
                     Add
                 </button>
@@ -243,60 +236,72 @@ function TodoList({ credential, ActiveTasksId, setActiveTasksId, userId, onTasks
                         <li
                             key={task._id}
                             onClick={() => setActiveTasksId(task._id)}
-                            className={`todo-item ${task._id === ActiveTasksId ? "active" : ""
-                                }`}
+                            className={`todo-item ${task._id === ActiveTasksId ? "active" : ""}`}
                         >
                             <div
-                                className={`todo-priority-bar priority-${task.priority || "medium"
-                                    }`}
+                                className={`todo-priority-bar priority-${task.priority || "medium"}`}
                             />
 
                             <div className="todo-content">
                                 {editingTaskId === task._id ? (
-                                    <input
-                                        value={editingText}
-                                        onChange={(e) => setEditingText(e.target.value)}
-                                        onClick={(e) => e.stopPropagation()}
-                                        className="todo-edit-input"
-                                    />
+                                    <div className="todo-edit-row">
+                                        <input
+                                            value={editingText}
+                                            onChange={(e) => setEditingText(e.target.value)}
+                                            onClick={(e) => e.stopPropagation()}
+                                            className="todo-edit-input"
+                                        />
+                                        <select
+                                            value={editingPriority}
+                                            onChange={(e) => setEditingPriority(e.target.value)}
+                                            className="todo-edit-priority-select"
+                                        >
+                                            <option value="high">Високий</option>
+                                            <option value="medium">Середній</option>
+                                            <option value="low">Низький</option>
+                                        </select>
+                                        <input
+                                            type="date"
+                                            value={editingDeadline}
+                                            onChange={(e) => setEditingDeadline(e.target.value)}
+                                            className="todo-edit-deadline-input"
+                                        />
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                saveEdit(task);
+                                            }}
+                                            className="todo-del"
+                                        >
+                                            Зберегти
+                                        </button>
+                                    </div>
                                 ) : (
+                                    
                                     <span
-                                        className={`todo-text ${task.completed ? "completed" : ""
-                                            }`}
+                                        className={`todo-text ${task.completed ? "completed" : ""}`}
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             toggleCompleted(task);
                                         }}
                                     >
                                         {task.text}
-                                    </span>
-                                )}
-
-                                {task.deadline && (
-                                    <span className="todo-deadline">
-                                        до {formatDeadline(task.deadline)}
+                                        {task.deadline && (
+                                            <span className="todo-deadline">
+                                                до {formatDeadline(task.deadline)}
+                                            </span>
+                                        )}
                                     </span>
                                 )}
                             </div>
 
                             <span
-                                className={`todo-priority-badge priority-badge-${task.priority || "medium"
-                                    }`}
+                                className={`todo-priority-badge priority-badge-${task.priority || "medium"}`}
                             >
                                 {PRIORITY_LABELS[task.priority || "medium"]}
                             </span>
 
-                            {editingTaskId === task._id ? (
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        saveEdit(task);
-                                    }}
-                                    className="todo-del"
-                                >
-                                    Зберегти
-                                </button>
-                            ) : (
+                            {editingTaskId !== task._id && (
                                 <button
                                     onClick={(e) => {
                                         e.stopPropagation();

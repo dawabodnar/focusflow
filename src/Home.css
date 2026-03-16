@@ -300,6 +300,22 @@ padding: 0px 74px 0px;
   letter-spacing: 0.04em;
   line-height: 1.6;
 }
-
+.btn-login {
+  background: var(--ink);
+  color: var(--paper);
+  border: none;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 12px 24px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: background 0.25s;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+.btn-login:hover { background: var(--accent); }
 
 

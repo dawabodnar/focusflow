@@ -7,24 +7,23 @@ export default function Home() {
     const [credential, setCredential] = useState(localStorage.getItem('credential'));
     const [userId, setUserId] = useState(localStorage.getItem('userId'));
 
-const handleLoginSuccess = (credentialResponse) => {
-    const cred = credentialResponse.credential;
-    setCredential(cred);
-    localStorage.setItem('credential', cred);
+    const handleLoginSuccess = (credentialResponse) => {
+        const cred = credentialResponse.credential;
+        setCredential(cred);
+        localStorage.setItem('credential', cred);
 
-    try {
-        // FedCM може повертати не JWT - витягуємо userId інакше
-        const parts = cred.split('.');
-        if (parts.length === 3) {
-            const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
-            const uid = payload.sub;
-            setUserId(uid);
-            localStorage.setItem('userId', uid);
+        try {
+            const parts = cred.split('.');
+            if (parts.length === 3) {
+                const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+                const uid = payload.sub;
+                setUserId(uid);
+                localStorage.setItem('userId', uid);
+            }
+        } catch (error) {
+            console.error('Error decoding token:', error);
         }
-    } catch (error) {
-        console.error('Error decoding token:', error);
-    }
-};
+    };
 
     const handleLogout = () => {
         setCredential(null);
@@ -48,7 +47,9 @@ const handleLoginSuccess = (credentialResponse) => {
                                 }}
                             />
                         </div>
+
                     )}
+                    <Link to="/auth" className="btn-login">Увійти</Link>
                     {credential && (
                         <button onClick={handleLogout} className="btn-logout">Вийти</button>
                     )}

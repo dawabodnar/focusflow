@@ -7,25 +7,32 @@ const PRIORITY_LABELS = {
     low: "низький",
 };
 
+const TAG_LABELS = {
+    work: "Work",
+    study: "Study",
+    personal: "Personal",
+    none: "",
+};
+
 function TodoList({ credential, ActiveTasksId, setActiveTasksId, userId, onTasksChange }) {
     const [tasks, setTasks] = useState([]);
     const [inputValue, setInputValue] = useState("");
     const [priority, setPriority] = useState("medium");
     const [deadline, setDeadline] = useState("");
+    const [tag, setTag] = useState("none");
 
     const [editingTaskId, setEditingTaskId] = useState(null);
     const [editingText, setEditingText] = useState("");
     const [editingPriority, setEditingPriority] = useState("medium");
     const [editingDeadline, setEditingDeadline] = useState("");
+    const [editingTag, setEditingTag] = useState("none");
 
     const API_URL = "https://focusflow-1-xxwp.onrender.com/api/tasks";
 
-    // передаємо оновлення в батьківський компонент
     useEffect(() => {
         if (onTasksChange) onTasksChange(tasks);
     }, [tasks, onTasksChange]);
 
-    // завантаження задач
     useEffect(() => {
         const fetchTasks = async () => {
             if (!credential) {
@@ -58,7 +65,6 @@ function TodoList({ credential, ActiveTasksId, setActiveTasksId, userId, onTasks
         }
     }, [credential, userId]);
 
-    // збереження локально для незалогінених
     useEffect(() => {
         if (!credential) {
             localStorage.setItem("localTasks", JSON.stringify(tasks));
@@ -72,6 +78,7 @@ function TodoList({ credential, ActiveTasksId, setActiveTasksId, userId, onTasks
             text: inputValue.trim(),
             priority,
             deadline: deadline || null,
+            tag,
         };
 
         if (credential) {
@@ -98,6 +105,7 @@ function TodoList({ credential, ActiveTasksId, setActiveTasksId, userId, onTasks
         setInputValue("");
         setDeadline("");
         setPriority("medium");
+        setTag("none");
     };
 
     const removeTask = async (id) => {
@@ -145,6 +153,7 @@ function TodoList({ credential, ActiveTasksId, setActiveTasksId, userId, onTasks
         setEditingText(task.text);
         setEditingPriority(task.priority || "medium");
         setEditingDeadline(task.deadline ? task.deadline.split("T")[0] : "");
+        setEditingTag(task.tag || "none");
     };
 
     const saveEdit = async (task) => {
@@ -154,6 +163,7 @@ function TodoList({ credential, ActiveTasksId, setActiveTasksId, userId, onTasks
             text: editingText,
             priority: editingPriority,
             deadline: editingDeadline || null,
+            tag: editingTag,
         };
 
         if (credential) {
@@ -182,6 +192,7 @@ function TodoList({ credential, ActiveTasksId, setActiveTasksId, userId, onTasks
         setEditingText("");
         setEditingPriority("medium");
         setEditingDeadline("");
+        setEditingTag("none");
     };
 
     const formatDeadline = (date) => {
@@ -219,15 +230,23 @@ function TodoList({ credential, ActiveTasksId, setActiveTasksId, userId, onTasks
                     <option value="medium">Середній</option>
                     <option value="low">Низький</option>
                 </select>
+                <select
+                    className="todo-tag-select"
+                    value={tag}
+                    onChange={(e) => setTag(e.target.value)}
+                >
+                    <option value="none">— тег —</option>
+                    <option value="work">Work</option>
+                    <option value="study">Study</option>
+                    <option value="personal">Personal</option>
+                </select>
                 <input
                     type="date"
                     className="todo-deadline-input"
                     value={deadline}
                     onChange={(e) => setDeadline(e.target.value)}
                 />
-                <button className="todo-add-btn" onClick={addTask}>
-                    Add
-                </button>
+                <button className="todo-add-btn" onClick={addTask}>Add</button>
             </div>
 
             <div className="todo-scroll">
@@ -238,9 +257,7 @@ function TodoList({ credential, ActiveTasksId, setActiveTasksId, userId, onTasks
                             onClick={() => setActiveTasksId(task._id)}
                             className={`todo-item ${task._id === ActiveTasksId ? "active" : ""}`}
                         >
-                            <div
-                                className={`todo-priority-bar priority-${task.priority || "medium"}`}
-                            />
+                            <div className={`todo-priority-bar priority-${task.priority || "medium"}`} />
 
                             <div className="todo-content">
                                 {editingTaskId === task._id ? (
@@ -260,6 +277,16 @@ function TodoList({ credential, ActiveTasksId, setActiveTasksId, userId, onTasks
                                             <option value="medium">Середній</option>
                                             <option value="low">Низький</option>
                                         </select>
+                                        <select
+                                            value={editingTag}
+                                            onChange={(e) => setEditingTag(e.target.value)}
+                                            className="todo-edit-priority-select"
+                                        >
+                                            <option value="none">— тег —</option>
+                                            <option value="work">Work</option>
+                                            <option value="study">Study</option>
+                                            <option value="personal">Personal</option>
+                                        </select>
                                         <input
                                             type="date"
                                             value={editingDeadline}
@@ -267,23 +294,16 @@ function TodoList({ credential, ActiveTasksId, setActiveTasksId, userId, onTasks
                                             className="todo-edit-deadline-input"
                                         />
                                         <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                saveEdit(task);
-                                            }}
+                                            onClick={(e) => { e.stopPropagation(); saveEdit(task); }}
                                             className="todo-del"
                                         >
                                             Зберегти
                                         </button>
                                     </div>
                                 ) : (
-                                    
                                     <span
                                         className={`todo-text ${task.completed ? "completed" : ""}`}
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            toggleCompleted(task);
-                                        }}
+                                        onClick={(e) => { e.stopPropagation(); toggleCompleted(task); }}
                                     >
                                         {task.text}
                                         {task.deadline && (
@@ -295,18 +315,19 @@ function TodoList({ credential, ActiveTasksId, setActiveTasksId, userId, onTasks
                                 )}
                             </div>
 
-                            <span
-                                className={`todo-priority-badge priority-badge-${task.priority || "medium"}`}
-                            >
+                            {task.tag && task.tag !== "none" && (
+                                <span className={`todo-tag todo-tag-${task.tag}`}>
+                                    {TAG_LABELS[task.tag]}
+                                </span>
+                            )}
+
+                            <span className={`todo-priority-badge priority-badge-${task.priority || "medium"}`}>
                                 {PRIORITY_LABELS[task.priority || "medium"]}
                             </span>
 
                             {editingTaskId !== task._id && (
                                 <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        startEdit(task);
-                                    }}
+                                    onClick={(e) => { e.stopPropagation(); startEdit(task); }}
                                     className="todo-del"
                                 >
                                     Редагувати
@@ -314,10 +335,7 @@ function TodoList({ credential, ActiveTasksId, setActiveTasksId, userId, onTasks
                             )}
 
                             <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    removeTask(task._id);
-                                }}
+                                onClick={(e) => { e.stopPropagation(); removeTask(task._id); }}
                                 className="todo-del"
                             >
                                 Видалити

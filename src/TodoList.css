@@ -197,4 +197,30 @@ border: 1px solid var(--border)
   outline: none;
   background: var(--warm);
 }
+.todo-tag {
+  font-size: 9px;
+  padding: 2px 8px;
+  border-radius: 2px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+.todo-tag-work { background: #E6F1FB; color: #185FA5; }
+.todo-tag-study { background: #EAF3DE; color: #3B6D11; }
+.todo-tag-personal { background: #EEEDFE; color: #534AB7; }
 
+.todo-tag-select {
+  background: none;
+  border: none;
+  border-right: 1px solid var(--border);
+  padding: 0 12px;
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  cursor: pointer;
+  outline: none;
+}

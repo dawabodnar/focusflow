@@ -13,10 +13,14 @@ const handleLoginSuccess = (credentialResponse) => {
     localStorage.setItem('credential', cred);
 
     try {
-        const payload = JSON.parse(atob(cred.split('.')[1]));
-        const uid = payload.sub;
-        setUserId(uid);
-        localStorage.setItem('userId', uid);
+        // FedCM може повертати не JWT - витягуємо userId інакше
+        const parts = cred.split('.');
+        if (parts.length === 3) {
+            const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+            const uid = payload.sub;
+            setUserId(uid);
+            localStorage.setItem('userId', uid);
+        }
     } catch (error) {
         console.error('Error decoding token:', error);
     }

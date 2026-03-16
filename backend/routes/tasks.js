@@ -61,8 +61,12 @@ router.put("/:id", async (req, res) => {
    const user = await verifyToken(credential);
     const task = await Task.findById(req.params.id);
     if (!task || task.userId !== user.userId) return res.status(404).json({ error: "Task not found" });
-    const { text, completed } = req.body;
-    const updatedTask = await Task.findByIdAndUpdate(req.params.id, { text, completed }, { new: true });
+   const { text, completed, priority, deadline } = req.body;
+const updatedTask = await Task.findByIdAndUpdate(
+  req.params.id,
+  { text, completed, priority, deadline },
+  { new: true }
+);
     sendUpdate(user.userId);
     res.json(updatedTask);
   } catch (err) {

@@ -1,55 +1,36 @@
-const express = require("express");
-const router = express.Router();
-const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const User = require("../models/User");
 
-const JWT_SECRET = process.env.JWT_SECRET;
-
-router.post("/register", async (req, res) => {
-  const { name, email, password } = req.body;
-  if (!name || !email || !password)
-    return res.status(400).json({ error: "Всі поля обов'язкові" });
+// Отримати статистику
+router.get("/stats", async (req, res) => {
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token) return res.status(401).json({ error: "Unauthorized" });
   try {
-    const existing = await User.findOne({ email });
-    if (existing)
-      return res.status(400).json({ error: "Email вже використовується" });
-    const hashed = await bcrypt.hash(password, 10);
-    const user = new User({ name, email, password: hashed });
-    await user.save();
-    const token = jwt.sign(
-      { userId: user._id, email: user.email, name: user.name },
-      JWT_SECRET,
-      { expiresIn: "7d" }
-    );
-    res.status(201).json({ token, name: user.name, userId: user._id });
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.userId);
+    if (!user) return res.status(404).json({ error: "User not found" });
+    res.json({
+      name: user.name,
+      pomodoroCount: user.pomodoroCount,
+      createdAt: user.createdAt,
+    });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Помилка сервера" });
+    res.status(401).json({ error: "Invalid token" });
   }
 });
 
-router.post("/login", async (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password)
-    return res.status(400).json({ error: "Всі поля обов'язкові" });
+// Додати помодоро
+router.post("/stats/pomodoro", async (req, res) => {
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token) return res.status(401).json({ error: "Unauthorized" });
   try {
-    const user = await User.findOne({ email });
-    if (!user || !user.password)
-      return res.status(401).json({ error: "Невірний email або пароль" });
-    const match = await bcrypt.compare(password, user.password);
-    if (!match)
-      return res.status(401).json({ error: "Невірний email або пароль" });
-    const token = jwt.sign(
-      { userId: user._id, email: user.email, name: user.name },
-      JWT_SECRET,
-      { expiresIn: "7d" }
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findByIdAndUpdate(
+      decoded.userId,
+      { $inc: { pomodoroCount: 1 } },
+      { new: true }
     );
-    res.json({ token, name: user.name, userId: user._id });
+    res.json({ pomodoroCount: user.pomodoroCount });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Помилка сервера" });
+    res.status(401).json({ error: "Invalid token" });
   }
 });
-
-module.exports = router;

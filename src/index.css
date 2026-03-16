@@ -53,3 +53,33 @@ body {
 .btn-home:hover::before {
     width: 56px;
 }
+.app-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-bottom: 1px solid var(--border);
+  max-width: 1000px;
+  width: 100%;
+  margin: 0 auto;
+}
+.app-stat {
+  padding: 20px 32px;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.app-stat:last-child { border-right: none; }
+.app-stat-value {
+  font-family: 'Playfair Display', serif;
+  font-size: 32px;
+  font-weight: 900;
+  font-style: italic;
+  line-height: 1;
+  color: var(--ink);
+}
+.app-stat-label {
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}

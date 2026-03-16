@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
-
+const express = require("express");
+const router = express.Router();
 // Отримати статистику
 router.get("/stats", async (req, res) => {
   const token = req.headers.authorization?.split(" ")[1];
@@ -34,3 +35,4 @@ router.post("/stats/pomodoro", async (req, res) => {
     res.status(401).json({ error: "Invalid token" });
   }
 });
+module.exports = router;

@@ -3,7 +3,7 @@ const router = express.Router();
 const Task = require("../models/Task");
 const verifyToken = require("../verifyToken");
 
-// ================= SSE =================
+// SSE 
 
 let clients = [];
 
@@ -26,7 +26,7 @@ function sendUpdate(userId) {
   });
 }
 
-// ================= Routes =================
+//  Routes 
 
 router.post("/fetch", async (req, res) => {
   const { credential } = req.body;

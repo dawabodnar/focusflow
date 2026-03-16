@@ -12,7 +12,7 @@ app.use(express.json());
 
 
 
-// ================= MongoDB =================
+//  MongoDB 
 
 mongoose.connect(
   process.env.MONGODB_URI
@@ -23,7 +23,7 @@ mongoose.connect(
 
 const authRouter = require("./routes/auth");
 app.use("/api/auth", authRouter);
-// ================= Routes =================
+//  Routes 
 
 app.use("/api/tasks", tasksRouter);
 
@@ -31,7 +31,7 @@ app.get("/", (req, res) => {
   res.send("API works");
 });
 
-// ================= Server =================
+// Server 
 
 const PORT = process.env.PORT || 5001;
 

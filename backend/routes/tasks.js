@@ -41,14 +41,24 @@ router.post("/fetch", async (req, res) => {
 });
 
 router.post("/", async (req, res) => {
-  const { credential, text } = req.body;
+  const { credential, text, priority, deadline } = req.body;
   if (!credential || !text) return res.status(400).json({ error: "Missing credential or text" });
+
   try {
     const user = await verifyToken(credential);
-    const task = new Task({ userId: user.userId, text, completed: false });
+
+    const task = new Task({
+      userId: user.userId,
+      text,
+      completed: false,
+      priority: priority || "medium",
+      deadline: deadline || null
+    });
+
     const savedTask = await task.save();
     sendUpdate(user.userId);
     res.status(201).json(savedTask);
+
   } catch (err) {
     res.status(401).json({ error: "Invalid Google token" });
   }

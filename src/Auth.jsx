@@ -8,6 +8,7 @@ export default function Auth() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
     const API_URL = "https://focusflow-1-xxwp.onrender.com/api/auth";
@@ -19,6 +20,7 @@ export default function Auth() {
             return;
         }
 
+        setLoading(true);
         const endpoint = isLogin ? "/login" : "/register";
         const body = isLogin ? { email, password } : { name, email, password };
 
@@ -42,7 +44,9 @@ export default function Auth() {
             navigate("/app", { state: { credential: data.token, userId: data.userId } });
         } catch (err) {
             console.error(err);
-            setError("Помилка з'єднання з сервером");
+            setError("Сервер прокидається, зачекайте 30 секунд і спробуйте ще раз");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -90,8 +94,12 @@ export default function Auth() {
                         onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
                     />
                     {error && <div className="auth-error">{error}</div>}
-                    <button className="auth-submit" onClick={handleSubmit}>
-                        {isLogin ? "Увійти" : "Зареєструватись"}
+                    <button
+                        className="auth-submit"
+                        onClick={handleSubmit}
+                        disabled={loading}
+                    >
+                        {loading ? "Завантаження..." : (isLogin ? "Увійти" : "Зареєструватись")}
                     </button>
                 </div>
             </div>
